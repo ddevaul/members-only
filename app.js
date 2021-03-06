@@ -35,10 +35,15 @@ passport.use(
       if (!user) {
         return done(null, false, { message: "Incorrect username" });
       }
-      if (user.password !== password) {
-        return done(null, false, { message: "Incorrect password" });
-      }
-      return done(null, user);
+      bcrypt.compare(password, user.password, (err, res) => {
+        if (res) {
+          // passwords match! log user in
+          return done(null, user)
+        } else {
+          // passwords do not match!
+          return done(null, false, { message: "Incorrect password" })
+        }
+      })
     });
   })
 );
@@ -67,17 +72,17 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 
 app.use('/', indexRouter);
-app.get('/login', (req, res) => {
+app.get('/users/login', (req, res) => {
   res.render('login');
 });
 app.post(
-  "/login",
+  "/users/login",
   passport.authenticate("local", {
     successRedirect: "/messages",
-    failureRedirect: "/login"
+    failureRedirect: "/users/login"
   })
 );
-app.use('/users', usersRouter);
+// app.use('/users', usersRouter);
 app.use('/messages', messageRouter);
 
 
